@@ -1,0 +1,195 @@
+---
+  - name: This playbook for installing multiple apps using loop
+    hosts: all
+    become: true
+    tasks: 
+      - name: Task1 [Installing mysql/net-tools/sysstat/dovecoat]
+        package: 
+          name: "{{ item }}"
+          state: latest
+        loop:
+          - mysql
+          - net-tools
+          - sysstat
+          - dovecot
+        when:
+          ansible_hostname == "AC1"
+
+
+---
+  - name: This playbook for installing Postfix/NTP/Apache
+    hosts: all
+    become: true
+    tasks: 
+      - name: Task1 [Apache2 for Ubuntu]
+        apt: 
+          name: apache2
+          state: latest
+        when:
+          ansible_distribution == "Ubuntu"
+      - name: Task2 [HTTPD for RHEL]
+        yum:
+          name: httpd
+          state: present
+        when:
+          ansible_distribution == "RedHat"
+
+
+---
+  - name: Install packages with loop and vars
+    hosts: all
+    vars:
+      myapp:
+        - git
+        - wget
+        - mysql
+    become: true
+    remote_user: ravi
+    tasks:
+      - name: Install postfix and dovecot
+        package:
+          name: "{{ item }}"
+          state: latest
+        loop: "{{ myapp }}"
+
+
+
+
+
+
+
+Date : 21-08-2024
+
+
+---
+- name: Create Groups
+  hosts: all
+  tasks:
+    - name: Create users and assign them to existing group
+      user:
+        name: "{{ item.name }}"
+        state: present
+        group: "{{ item.group }}"
+      loop: 
+        - name: user11
+          group: group1
+        - name: user12
+          group: group2
+        - name: user13
+          group: group3
+        - name: user14
+          group: group4
+
+
+
+
+---
+  - name: Create a multiple users
+    hosts: all
+    become: true
+    tasks:
+      - name: creating a user u101
+        user:
+          name: u101
+          state: present
+          shell: /bin/sh
+          create_home: yes
+          home: /home/user101
+        tags:
+          - task1
+      - name: creating a user u102
+        user:
+          name: u102
+          state: present
+          shell: /bin/sh
+          create_home: yes
+          home: /home/user102
+        tags:
+          - task2
+      - name: creating a user u103
+        user:
+          name: u103
+          state: present
+          shell: /bin/sh
+          create_home: yes
+          home: /home/user103
+        tags:
+          - task3
+      - name: creating a user u104
+        user:
+          name: u104
+          state: present
+          shell: /bin/sh
+          create_home: yes
+          home: /home/user104
+        tags:
+          - task4
+
+ansible-playbook play10.yaml -C --tags task3
+ansible-playbook play10.yaml -C --tags task1,task4
+
+
+22-08-2024
+
+---
+  - name: Building and setup web server
+    hosts: AC1
+    gather_facts: true
+    remote_user: Shivaram
+    become: true
+    tasks:
+      - name: Installing apache webserver
+        yum:
+          name: httpd
+          state: latest
+      - name: Defining the contents
+        copy:
+          content: "Hello My name is Shivaram"
+          dest: /var/www.html/index.html
+      - name: Start apache
+        service:
+          name: httpd
+          state: restarted
+          enabled: true
+
+
+
+
+---
+  - name: Implementing reuseable code concept
+    hosts: all
+    gather_facts: true
+    remote_user: Shivaram
+    become: true
+    tasks:
+      - name: Install Apache on RHEL
+        yum: 
+          name: httpd
+          state: present
+        when: ansible_os_family == "RedHat"
+      - name: Install Apache on Ubuntu
+        apt: 
+          name: apache2
+          state: present
+        when: ansible_os_family == "Debian"
+      - name: Installing Java on Redhat Family
+        yum:
+          name: java
+          state: present
+        when: ansible_os_family == "RedHat"
+      - name: Installing Java on Ubuntu Family
+        apt:
+          name: openjdk-8-jdk
+          state: present
+        when: ansible_os_family == "Debian"
+
+
+import_tasks: task1.yaml
+import_tasks: task2.yaml
+import_tasks: task3.yaml
+import_tasks: task4.yaml
+
+include_tasks: task1.yaml
+include_tasks: task2.yaml
+include_tasks: task3.yaml
+include_tasks: task4.yaml
